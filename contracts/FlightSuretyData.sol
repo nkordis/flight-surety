@@ -12,6 +12,9 @@ contract FlightSuretyData {
     address private contractOwner;                                      // Account used to deploy contract
     bool private operational = true;                                    // Blocks all state changes throughout the contract if false
 
+
+    mapping (address => bool) authorizedCallers; 
+
     /********************************************************************************************/
     /*                                       EVENT DEFINITIONS                                  */
     /********************************************************************************************/
@@ -89,6 +92,22 @@ contract FlightSuretyData {
         operational = mode;
     }
 
+
+    /**
+    * @dev Contract owner can authorize a caller to use the contract
+    *
+    * @param _caller The caller's address
+    */  
+    function authorizeCaller
+                            (
+                                address _caller
+                            )
+                            external
+                            requireContractOwner 
+    {
+        authorizedCallers[_caller] = true;
+    }
+
     /********************************************************************************************/
     /*                                     SMART CONTRACT FUNCTIONS                             */
     /********************************************************************************************/
@@ -103,7 +122,7 @@ contract FlightSuretyData {
                             )
                             external
                             pure
-    {
+    { 
     }
 
 
@@ -112,7 +131,7 @@ contract FlightSuretyData {
     *
     */   
     function buy
-                            (                             
+                            (                            
                             )
                             external
                             payable
