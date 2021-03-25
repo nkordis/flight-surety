@@ -10,10 +10,18 @@ contract FlightSuretyData {
     /********************************************************************************************/
 
     address private contractOwner;                                      // Account used to deploy contract
-    bool private operational = true;                                    // Blocks all state changes throughout the contract if false
+    bool private operational = true;  
+    uint256 private approvedAirlinesCount = 0;                                  // Blocks all state changes throughout the contract if false
 
+    struct Airline {
+        address airlineAddress;
+        bool isRegistered;
+        uint256 funds;
+        address[] voters;
+    }
 
-    mapping (address => bool) authorizedCallers; 
+    mapping (address => bool) private authorizedCallers; 
+    mapping(address => Airline) public registeredAirlines;
 
     /********************************************************************************************/
     /*                                       EVENT DEFINITIONS                                  */
@@ -56,6 +64,16 @@ contract FlightSuretyData {
     modifier requireContractOwner()
     {
         require(msg.sender == contractOwner, "Caller is not contract owner");
+        _;
+    }
+
+    
+    /**
+    * @dev Modifier that requires the caller of the function to be authorized
+    */
+    modifier requireCallerIsAuthorized()
+    {
+        require(authorizedCallers[msg.sender], "Caller is not authorized");
         _;
     }
 
@@ -119,10 +137,37 @@ contract FlightSuretyData {
     */   
     function registerAirline
                             (   
+                                address _airlineAddress,
+                                address airlineCaller
                             )
+                            requireIsOperational
+                            requireCallerIsAuthorized
                             external
-                            pure
+                           
     { 
+        require(registeredAirlines[_airlineAddress].airlineAddress == 0);
+        
+        if(approvedAirlinesCount < 5) 
+        {
+            registeredAirlines[_airlineAddress] = Airline(_airlineAddress, true, 0, new address[](0));
+        }
+       
+    }
+
+
+    /**
+    * @dev Check if an airline is registered
+    *
+    */
+    function isAirline
+                      (
+                        address _airlineAddress
+                       ) 
+                       public 
+                       view 
+                       returns (bool)
+    {
+        return registeredAirlines[_airlineAddress].isRegistered;
     }
 
 
