@@ -9,9 +9,10 @@ contract FlightSuretyData {
     /*                                       DATA VARIABLES                                     */
     /********************************************************************************************/
 
-    address private contractOwner;                                      // Account used to deploy contract
+    uint256 private constant REGISTRATION_FEE = 10 ether;
+    address private contractOwner; // Account used to deploy contract
     bool private operational = true;  
-    uint256 private approvedAirlinesCount = 0;                                  // Blocks all state changes throughout the contract if false
+    uint256 private approvedAirlinesCount = 0;  // Blocks all state changes throughout the contract if false
 
     struct Airline {
         address airlineAddress;
@@ -21,7 +22,7 @@ contract FlightSuretyData {
     }
 
     mapping (address => bool) private authorizedCallers; 
-    mapping(address => Airline) public registeredAirlines;
+    mapping(address => Airline) private registeredAirlines;
 
     /********************************************************************************************/
     /*                                       EVENT DEFINITIONS                                  */
@@ -74,6 +75,20 @@ contract FlightSuretyData {
     modifier requireCallerIsAuthorized()
     {
         require(authorizedCallers[msg.sender], "Caller is not authorized");
+        _;
+    }
+
+    /**
+    * @dev Modifier that requires the amount sent to activate a new airline to be at least equal with the registration fee 
+    */
+    modifier requireRegistrationFee()
+    {
+        require(msg.value >= REGISTRATION_FEE, "Amount sent is less than the registration fee");
+        _;
+    }
+
+    modifier requireAirlineDeposit(address _airlineCaller) {
+        require(registeredAirlines[_airlineCaller].funds >= REGISTRATION_FEE, "Airline has not paid the registration fee");
         _;
     }
 
@@ -138,10 +153,11 @@ contract FlightSuretyData {
     function registerAirline
                             (   
                                 address _airlineAddress,
-                                address airlineCaller
+                                address _airlineCaller
                             )
                             requireIsOperational
                             requireCallerIsAuthorized
+                            requireAirlineDeposit(_airlineCaller)
                             external
                            
     { 
@@ -167,7 +183,8 @@ contract FlightSuretyData {
                        view 
                        returns (bool)
     {
-        return registeredAirlines[_airlineAddress].isRegistered;
+       // return registeredAirlines[_airlineAddress].isRegistered;
+        return registeredAirlines[_airlineAddress].airlineAddress != 0;
     }
 
 
@@ -215,10 +232,15 @@ contract FlightSuretyData {
     */   
     function fund
                             (   
+                                address _airlineAddress
                             )
-                            public
+                            external
                             payable
+                            requireIsOperational
+                            requireRegistrationFee
     {
+        registeredAirlines[_airlineAddress].funds = registeredAirlines[_airlineAddress].funds.add(msg.value);
+        authorizedCallers[_airlineAddress] = true;
     }
 
     function getFlightKey
@@ -242,7 +264,7 @@ contract FlightSuretyData {
                             external 
                             payable 
     {
-        fund();
+        //fund();
     }
 
 

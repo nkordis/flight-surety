@@ -112,6 +112,20 @@ contract FlightSuretyApp {
         flightSuretyData.registerAirline(airlineAddress, msg.sender);
     }
 
+    
+   /**
+    * @dev Add funding for the insurance. 
+    *      
+    */   
+    function fund
+                (                 
+                )
+                public
+                payable
+    {
+        flightSuretyData.fund.value(msg.value)(msg.sender);
+    }
+
 
    /**
     * @dev Register a future flight for insuring.
@@ -342,6 +356,7 @@ contract FlightSuretyApp {
 
 contract FlightSuretyData {
     function registerAirline(address airlineAddress, address airlineCaller) external;
+    function fund(address airlineAddress) external payable;
 }
 
 // endregion
