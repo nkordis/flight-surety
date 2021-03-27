@@ -161,7 +161,21 @@ contract('Flight Surety Tests', async (accounts) => {
        assert.equal(result6, true, "Sixth Airline should be added as registered");
        assert.equal(result6candidate, false, "Sixth Airline should had removed from candidates list");
     
-        });
+    });
  
+    it('(flight) register a flight', async () => {
+		// ARRANGE
+		const flightName = 'FlightName';
+		
+		// ACT
+		await config.flightSuretyApp.registerFlight(flightName, 0, Date.now(), config.firstAirline, {from: config.firstAirline});
+
+        const flightKeys = await config.flightSuretyApp.flightsAvailable.call();
+		const flightNameFetched = await config.flightSuretyApp.getFlight.call(flightKeys[0]);
+
+		// ASSERT
+		assert.equal(flightNameFetched, flightName, "Flight name should be the same");
+		
+	})
 
 });

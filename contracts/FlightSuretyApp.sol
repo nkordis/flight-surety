@@ -28,12 +28,14 @@ contract FlightSuretyApp {
     FlightSuretyData flightSuretyData;
 
     struct Flight {
+        string flight;
         bool isRegistered;
         uint8 statusCode;
         uint256 updatedTimestamp;        
         address airline;
     }
     mapping(bytes32 => Flight) private flights;
+    bytes32[] private flightKeys; 
 
  
     /********************************************************************************************/
@@ -133,11 +135,36 @@ contract FlightSuretyApp {
     */  
     function registerFlight
                                 (
+                                    string flight,
+                                    uint8 statusCode, 
+                                    uint256 updatedTimestamp, 
+                                    address airline
                                 )
                                 external
-                                pure
     {
+        bytes32 key = getFlightKey(airline, flight, updatedTimestamp);
+        flights[key] = Flight(flight, true, statusCode, updatedTimestamp, airline);
+        flightKeys.push(key);
+    }
 
+    function flightsAvailable() public view returns (bytes32[]) {
+        return flightKeys;
+    }
+
+
+    /**
+    * @dev Get the flight name.
+    *
+    */
+    function getFlight
+                        (
+                            bytes32 key
+                        )
+                        public
+                        view
+                        returns(string)
+    {
+        return flights[key].flight;
     }
     
    /**
