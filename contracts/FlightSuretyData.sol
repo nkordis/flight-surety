@@ -18,7 +18,6 @@ contract FlightSuretyData {
 
     struct Airline {
         address airlineAddress;
-        //bool isRegistered;
         uint256 funds;
         address[] voters;
     }
@@ -26,6 +25,7 @@ contract FlightSuretyData {
     mapping (address => bool) private authorizedCallers; 
     mapping(address => Airline) private registeredAirlines;
     mapping(address => Airline) private candidatesAirlines;
+    mapping(address => mapping(address => bool)) private hasVotedFor;
     
 
     /********************************************************************************************/
@@ -175,10 +175,27 @@ contract FlightSuretyData {
                // if the airline is a candidate
             if(candidatesAirlines[_airlineAddress].airlineAddress != 0)
             {
+                // vote for it (if have not voted for it again)
+                if(!hasVotedFor[_airlineCaller][_airlineAddress])
+                {
+                candidatesAirlines[_airlineAddress].voters.push(_airlineCaller);
+                hasVotedFor[_airlineCaller][_airlineAddress] = true;
+                }
+
+                //and if the airline has enough votes
+                if(candidatesAirlines[_airlineAddress].voters.length * 100 >= registeredAirlinesNum * 100 / 2)
+                {
+                    //register it
+                    registeredAirlines[_airlineAddress] = candidatesAirlines[_airlineAddress];
+                    delete(candidatesAirlines[_airlineAddress]);
+                }
                     
             }else 
             {   // Add it as a candidate
-                candidatesAirlines[_airlineAddress] = Airline(_airlineAddress, 0, new address[](5));
+              Airline memory airline = Airline(_airlineAddress, 0, new address[](1));
+              airline.voters[0] = _airlineCaller;
+              candidatesAirlines[_airlineAddress] = airline;
+              hasVotedFor[_airlineCaller][_airlineAddress] = true;
             }
         }
        

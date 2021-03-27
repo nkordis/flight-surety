@@ -143,6 +143,25 @@ contract('Flight Surety Tests', async (accounts) => {
    assert.equal(result6candidate, true, "Sixth Airline should be added as a candidate");
 
     });
+
+    it('(airline) Sixth airline should be registered if approved from half of the registered airlines', async () => {
+        // ARRANGE
+        let secondAirline = accounts[2];
+        let thirdAirline = accounts[3];
+        let sixthAirline = accounts[6];
+        
+        // ACT
+        await config.flightSuretyApp.registerAirline(sixthAirline, {from: secondAirline});
+        await config.flightSuretyApp.registerAirline(sixthAirline, {from: thirdAirline});
+        
+        // ASSERT
+       let result6 = await config.flightSuretyData.isAirline.call(sixthAirline);
+       let result6candidate = await config.flightSuretyData.isCandidate.call(sixthAirline);
+       
+       assert.equal(result6, true, "Sixth Airline should be added as registered");
+       assert.equal(result6candidate, false, "Sixth Airline should had removed from candidates list");
+    
+        });
  
 
 });
