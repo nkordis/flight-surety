@@ -10,19 +10,23 @@ contract FlightSuretyData {
     /********************************************************************************************/
 
     uint256 private constant REGISTRATION_FEE = 10 ether;
+    uint8 private constant INITIAL_AIRLINES_NUM = 5;
+
     address private contractOwner; // Account used to deploy contract
     bool private operational = true;  
-    uint256 private approvedAirlinesCount = 0;  // Blocks all state changes throughout the contract if false
+    uint256 private registeredAirlinesNum = 0;  
 
     struct Airline {
         address airlineAddress;
-        bool isRegistered;
+        //bool isRegistered;
         uint256 funds;
         address[] voters;
     }
 
     mapping (address => bool) private authorizedCallers; 
     mapping(address => Airline) private registeredAirlines;
+    mapping(address => Airline) private candidatesAirlines;
+    
 
     /********************************************************************************************/
     /*                                       EVENT DEFINITIONS                                  */
@@ -163,13 +167,23 @@ contract FlightSuretyData {
     { 
         require(registeredAirlines[_airlineAddress].airlineAddress == 0);
         
-        if(approvedAirlinesCount < 5) 
+        if(registeredAirlinesNum < INITIAL_AIRLINES_NUM) 
         {
-            registeredAirlines[_airlineAddress] = Airline(_airlineAddress, true, 0, new address[](0));
+            registeredAirlines[_airlineAddress] = Airline(_airlineAddress, 0, new address[](0));
+        }else
+        {
+               // if the airline is a candidate
+            if(candidatesAirlines[_airlineAddress].airlineAddress != 0)
+            {
+                    
+            }else 
+            {   // Add it as a candidate
+                candidatesAirlines[_airlineAddress] = Airline(_airlineAddress, 0, new address[](5));
+            }
         }
        
     }
-
+    function getAirlinesNumber()public view  returns(uint256){return registeredAirlinesNum;}
 
     /**
     * @dev Check if an airline is registered
@@ -183,8 +197,22 @@ contract FlightSuretyData {
                        view 
                        returns (bool)
     {
-       // return registeredAirlines[_airlineAddress].isRegistered;
         return registeredAirlines[_airlineAddress].airlineAddress != 0;
+    }
+
+    /**
+    * @dev Check if an airline is candidate
+    *
+    */
+    function isCandidate
+                      (
+                        address _airlineAddress
+                       ) 
+                       public 
+                       view 
+                       returns (bool)
+    {
+        return candidatesAirlines[_airlineAddress].airlineAddress != 0;
     }
 
 
@@ -240,7 +268,7 @@ contract FlightSuretyData {
                             requireRegistrationFee
     {
         registeredAirlines[_airlineAddress].funds = registeredAirlines[_airlineAddress].funds.add(msg.value);
-        authorizedCallers[_airlineAddress] = true;
+        registeredAirlinesNum = registeredAirlinesNum.add(1);
     }
 
     function getFlightKey
@@ -264,7 +292,7 @@ contract FlightSuretyData {
                             external 
                             payable 
     {
-        //fund();
+      // fund();
     }
 
 
