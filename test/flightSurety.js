@@ -196,4 +196,33 @@ contract('Flight Surety Tests', async (accounts) => {
 		assert.equal(flightFetched[4][0], passengerAddress, "No registered customer with insurance for the flight");
 	})
 
+    /**
+     * In order the following test to work  "processFlightStatus" method in [FlightSuretyApp.sol] must be set to public. (current status is internal)
+     */
+
+    /** 
+    it('(multiparty) can payout passengers', async () => {
+
+        //ARRANGE
+        const flightName = 'FlightName';
+        const date = Date.now();
+        const passengerAddress = accounts[9];
+
+        await config.flightSuretyApp.registerFlight(flightName, date, config.firstAirline, {from: config.firstAirline});
+        const flightKeys = await config.flightSuretyData.flightsAvailable.call();
+        await config.flightSuretyApp.buy(flightKeys[1], {
+			from: passengerAddress,
+			value: web3.utils.toWei("0.5", "ether")
+		});
+
+
+        //ACT
+        await config.flightSuretyApp.processFlightStatus(config.firstAirline, flightName, date, 20); 
+        const newPassengerPayoutAmount = await config.flightSuretyData.getPassenger(passengerAddress);
+
+        //ASSERT
+        assert.equal("750000000000000000", newPassengerPayoutAmount[1], "Passengers new payout amount should be half of the deposit");
+
+    })
+    */
 });

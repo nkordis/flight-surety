@@ -130,9 +130,6 @@ contract FlightSuretyApp {
                                 )
                                 external
     {
-       // bytes32 key = getFlightKey(airline, flight, updatedTimestamp);
-       // flights[key] = Flight(flight, true, statusCode, updatedTimestamp, airline);
-       // flightKeys.push(key);
        return flightSuretyData.registerFlight(flight, STATUS_CODE_UNKNOWN, updatedTimestamp, airline);
     }
 
@@ -149,6 +146,14 @@ contract FlightSuretyApp {
     {
         flightSuretyData.buy.value(msg.value)(key, msg.sender);
     }
+
+    /**
+     *  @dev Transfers eligible payout funds to insuree
+     *
+    */
+    function pay() external payable {
+        flightSuretyData.pay(msg.sender);
+    }
     
    /**
     * @dev Called after oracle has updated flight status
@@ -162,8 +167,9 @@ contract FlightSuretyApp {
                                     uint8 statusCode
                                 )
                                 internal
-                                pure
+                                //public 
     {
+        flightSuretyData.processFlightStatus(airline, flight, timestamp, statusCode);
     }
 
 
@@ -369,6 +375,8 @@ contract FlightSuretyData {
     function fund(address airlineAddress) external payable;
     function registerFlight(string flight,uint8 statusCode, uint256 updatedTimestamp, address airlin)external;
     function buy(bytes32 key, address passenger) external payable;
+    function pay(address passenger) external payable;
+    function processFlightStatus(address airline, string flight, uint256 timestamp, uint8 statusCode) external;
 }
 
 // endregion

@@ -23,8 +23,8 @@ contract FlightSuretyData {
     }
 
     struct Passenger {
-        uint256 insuranceAmount;
-        uint256 credit;
+        uint256 deposit;
+        uint256 payout;
     }
 
     struct Flight {
@@ -274,7 +274,7 @@ contract FlightSuretyData {
 
 
     /**
-    * @dev Get the flight name.
+    * @dev Get the flight details.
     *
     */
     function getFlight
@@ -311,14 +311,44 @@ contract FlightSuretyData {
     }
 
     /**
+    * @dev Process the insurance for a flight
+    *
+    */  
+    function processFlightStatus
+                                (
+                                    address airline,
+                                    string flight,
+                                    uint256 updatedTimestamp,
+                                    uint8 statusCode     
+                                ) 
+                                external 
+                                requireIsOperational 
+                                requireCallerIsAuthorized
+                                {
+        bytes32 key = getFlightKey(airline, flight, updatedTimestamp);
+        flights[key].statusCode = statusCode;
+        if (statusCode != 10 && statusCode != 0) {
+            for (uint i = 0; i < flights[key].passengersInsurances.length; i++) {
+                creditInsurees(flights[key].passengersInsurances[i]);
+            }
+        }
+    }
+
+    /**
      *  @dev Credits payouts to insurees
     */
     function creditInsurees
                                 (
+                                    address _passengerAddress
                                 )
-                                external
-                                pure
+                                internal
+                                requireIsOperational
+                                requireCallerIsAuthorized                         
     {
+        
+        uint256 deposit = passengersAddresses[_passengerAddress].deposit;
+        passengersAddresses[_passengerAddress].deposit = passengersAddresses[_passengerAddress].deposit.sub(deposit);
+        passengersAddresses[_passengerAddress].payout = passengersAddresses[_passengerAddress].payout.add(deposit).add(deposit / 2);
     }
     
 
@@ -328,10 +358,16 @@ contract FlightSuretyData {
     */
     function pay
                             (
+                                address _passengerAddress
                             )
                             external
-                            pure
+                            payable
+                            requireIsOperational
+                            requireCallerIsAuthorized
     {
+        uint256 payout = passengersAddresses[_passengerAddress].payout;
+        passengersAddresses[_passengerAddress].payout = passengersAddresses[_passengerAddress].payout.sub(payout);
+        _passengerAddress.transfer(payout);
     }
 
    /**
@@ -351,6 +387,13 @@ contract FlightSuretyData {
         registeredAirlines[_airlineAddress].funds = registeredAirlines[_airlineAddress].funds.add(msg.value);
         registeredAirlinesNum = registeredAirlinesNum.add(1);
     }
+
+
+    function getPassenger(address _address) public view returns (uint256, uint256){
+
+        return (passengersAddresses[_address].deposit, passengersAddresses[_address].payout);
+    }
+
 
     function getFlightKey
                         (
