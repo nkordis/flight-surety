@@ -22,11 +22,29 @@ contract FlightSuretyData {
         address[] voters;
     }
 
+    struct Passenger {
+        uint256 insuranceAmount;
+        uint256 credit;
+    }
+
+    struct Flight {
+        string flightName;
+        bool isRegistered;
+        uint8 statusCode;
+        uint256 updatedTimestamp;        
+        address airline;
+        address[] passengersInsurances;
+    }
+    
+    bytes32[] private flightKeys; 
+
     mapping (address => bool) private authorizedCallers; 
     mapping(address => Airline) private registeredAirlines;
     mapping(address => Airline) private candidatesAirlines;
     mapping(address => mapping(address => bool)) private hasVotedFor;
-    
+    mapping(address => Passenger) private passengersAddresses;
+    mapping(bytes32 => Flight) private flights;
+
 
     /********************************************************************************************/
     /*                                       EVENT DEFINITIONS                                  */
@@ -232,18 +250,64 @@ contract FlightSuretyData {
         return candidatesAirlines[_airlineAddress].airlineAddress != 0;
     }
 
+     /**
+    * @dev Register a future flight for insuring.
+    *
+    */  
+    function registerFlight
+                                (
+                                    string flight,
+                                    uint8 statusCode, 
+                                    uint256 updatedTimestamp, 
+                                    address airline
+                                )
+                                external
+    {
+        bytes32 key = getFlightKey(airline, flight, updatedTimestamp);
+        flights[key] = Flight(flight, true, statusCode, updatedTimestamp, airline, new address[](0));
+        flightKeys.push(key);
+    }   
+
+    function flightsAvailable() public view returns (bytes32[]) {
+        return flightKeys;
+    }
+
+
+    /**
+    * @dev Get the flight name.
+    *
+    */
+    function getFlight
+                        (
+                            bytes32 key
+                        )
+                        public
+                        view
+                        returns(string flightName, uint statusCode, uint256 updatedTimestamp, address airline, address[] customersInsurances)
+    {
+        flightName = flights[key].flightName;
+        statusCode = flights[key].statusCode;
+        updatedTimestamp = flights[key].updatedTimestamp;
+        airline = flights[key].airline;
+        customersInsurances = flights[key].passengersInsurances;
+    }
 
    /**
     * @dev Buy insurance for a flight
     *
     */   
     function buy
-                            (                            
+                            (  
+                                bytes32 key, 
+                                address passengerAddress                          
                             )
                             external
                             payable
     {
+         require(msg.value <= 1 ether, "Insurrance cannot be more than 1 ether");
 
+        passengersAddresses[passengerAddress] = Passenger(msg.value, 0);
+        flights[key].passengersInsurances.push(passengerAddress);
     }
 
     /**

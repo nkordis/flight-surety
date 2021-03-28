@@ -163,19 +163,37 @@ contract('Flight Surety Tests', async (accounts) => {
     
     });
  
-    it('(flight) register a flight', async () => {
+    it('(flight) can register a flight', async () => {
 		// ARRANGE
 		const flightName = 'FlightName';
 		
 		// ACT
-		await config.flightSuretyApp.registerFlight(flightName, 0, Date.now(), config.firstAirline, {from: config.firstAirline});
+		await config.flightSuretyApp.registerFlight(flightName, Date.now(), config.firstAirline, {from: config.firstAirline});
 
-        const flightKeys = await config.flightSuretyApp.flightsAvailable.call();
-		const flightNameFetched = await config.flightSuretyApp.getFlight.call(flightKeys[0]);
-
+        const flightKeys = await config.flightSuretyData.flightsAvailable.call();
+		const flightFetched = await config.flightSuretyData.getFlight.call(flightKeys[0]);
+        
 		// ASSERT
-		assert.equal(flightNameFetched, flightName, "Flight name should be the same");
+		assert.equal(flightFetched[0], flightName, "Flight name should be the same");
 		
+	})
+
+    it('(passenger) can buy an insurance', async () => {
+		// ARRANGE
+		const passengerAddress = accounts[9];
+		
+		const flightKeys = await config.flightSuretyData.flightsAvailable.call();
+
+		// ACT
+		await config.flightSuretyApp.buy(flightKeys[0], {
+			from: passengerAddress,
+			value: web3.utils.toWei("0.5", "ether")
+		});
+		
+		const flightFetched = await config.flightSuretyData.getFlight.call(flightKeys[0]);
+		
+        // ASSERT
+		assert.equal(flightFetched[4][0], passengerAddress, "No registered customer with insurance for the flight");
 	})
 
 });

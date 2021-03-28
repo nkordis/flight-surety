@@ -26,17 +26,6 @@ contract FlightSuretyApp {
 
     address private contractOwner;          // Account used to deploy contract
     FlightSuretyData flightSuretyData;
-
-    struct Flight {
-        string flight;
-        bool isRegistered;
-        uint8 statusCode;
-        uint256 updatedTimestamp;        
-        address airline;
-    }
-    mapping(bytes32 => Flight) private flights;
-    bytes32[] private flightKeys; 
-
  
     /********************************************************************************************/
     /*                                       FUNCTION MODIFIERS                                 */
@@ -136,35 +125,29 @@ contract FlightSuretyApp {
     function registerFlight
                                 (
                                     string flight,
-                                    uint8 statusCode, 
                                     uint256 updatedTimestamp, 
                                     address airline
                                 )
                                 external
     {
-        bytes32 key = getFlightKey(airline, flight, updatedTimestamp);
-        flights[key] = Flight(flight, true, statusCode, updatedTimestamp, airline);
-        flightKeys.push(key);
+       // bytes32 key = getFlightKey(airline, flight, updatedTimestamp);
+       // flights[key] = Flight(flight, true, statusCode, updatedTimestamp, airline);
+       // flightKeys.push(key);
+       return flightSuretyData.registerFlight(flight, STATUS_CODE_UNKNOWN, updatedTimestamp, airline);
     }
-
-    function flightsAvailable() public view returns (bytes32[]) {
-        return flightKeys;
-    }
-
 
     /**
-    * @dev Get the flight name.
+    * @dev Buy insurance for a flight
     *
-    */
-    function getFlight
-                        (
-                            bytes32 key
-                        )
-                        public
-                        view
-                        returns(string)
+    */   
+    function buy
+                            (
+                                bytes32 key                            
+                            )
+                            external
+                            payable
     {
-        return flights[key].flight;
+        flightSuretyData.buy.value(msg.value)(key, msg.sender);
     }
     
    /**
@@ -384,6 +367,8 @@ contract FlightSuretyApp {
 contract FlightSuretyData {
     function registerAirline(address airlineAddress, address airlineCaller) external;
     function fund(address airlineAddress) external payable;
+    function registerFlight(string flight,uint8 statusCode, uint256 updatedTimestamp, address airlin)external;
+    function buy(bytes32 key, address passenger) external payable;
 }
 
 // endregion
