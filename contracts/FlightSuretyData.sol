@@ -327,7 +327,7 @@ contract FlightSuretyData {
                                 {
         bytes32 key = getFlightKey(airline, flight, updatedTimestamp);
         flights[key].statusCode = statusCode;
-        if (statusCode != 10 && statusCode != 0) {
+        if (statusCode == 20) {
             for (uint i = 0; i < flights[key].passengersInsurances.length; i++) {
                 creditInsurees(flights[key].passengersInsurances[i]);
             }
