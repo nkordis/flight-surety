@@ -166,8 +166,8 @@ contract FlightSuretyApp {
                                     uint256 timestamp,
                                     uint8 statusCode
                                 )
-                                internal
-                                //public 
+                                // internal (should be on production, set to public for testing)
+                                public 
     {
         flightSuretyData.processFlightStatus(airline, flight, timestamp, statusCode);
     }

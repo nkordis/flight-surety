@@ -197,10 +197,9 @@ contract('Flight Surety Tests', async (accounts) => {
 	})
 
     /**
-     * In order the following test to work  "processFlightStatus" method in [FlightSuretyApp.sol] must be set to public. (current status is internal)
+     * In order to test  "processFlightStatus" method in [FlightSuretyApp.sol] is set to public. (production status should be internal)
      */
-
-    /** 
+ 
     it('(multiparty) can payout passengers', async () => {
 
         //ARRANGE
@@ -224,5 +223,5 @@ contract('Flight Surety Tests', async (accounts) => {
         assert.equal("750000000000000000", newPassengerPayoutAmount[1], "Passengers new payout amount should be half of the deposit");
 
     })
-    */
+    
 });
