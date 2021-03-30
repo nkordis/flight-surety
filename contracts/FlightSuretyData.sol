@@ -57,10 +57,12 @@ contract FlightSuretyData {
     */
     constructor
                                 (
+                                    address firstAirlineAddress
                                 ) 
                                 public 
     {
         contractOwner = msg.sender;
+        registeredAirlines[firstAirlineAddress] = Airline(firstAirlineAddress, 0, new address[](0));
     }
 
     /********************************************************************************************/
@@ -111,6 +113,11 @@ contract FlightSuretyData {
 
     modifier requireAirlineDeposit(address _airlineCaller) {
         require(registeredAirlines[_airlineCaller].funds >= REGISTRATION_FEE, "Airline has not paid the registration fee");
+        _;
+    }
+
+    modifier requireIsRegistered(address _airlineCaller){
+        require(registeredAirlines[_airlineCaller].airlineAddress != 0, "Airline is not registered");
         _;
     }
 
@@ -219,6 +226,16 @@ contract FlightSuretyData {
        
     }
     function getAirlinesNumber()public view  returns(uint256){return registeredAirlinesNum;}
+
+    /**
+    * @dev Get the Airline details.
+    *
+    */
+    function getAirlineStatus(address _airlineAddress)public view returns(uint256 funds, bool isRegistered)
+    {
+        funds = registeredAirlines[_airlineAddress].funds;
+        isRegistered = registeredAirlines[_airlineAddress].airlineAddress != 0;
+    }
 
     /**
     * @dev Check if an airline is registered
@@ -382,7 +399,8 @@ contract FlightSuretyData {
                             external
                             payable
                             requireIsOperational
-                            requireRegistrationFee
+                            requireIsRegistered(_airlineAddress)
+                            requireRegistrationFee                     
     {
         registeredAirlines[_airlineAddress].funds = registeredAirlines[_airlineAddress].funds.add(msg.value);
         registeredAirlinesNum = registeredAirlinesNum.add(1);

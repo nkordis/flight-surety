@@ -43,7 +43,7 @@ contract('Flight Surety Tests', async (accounts) => {
       let accessDenied = false;
       try 
       {
-          await config.flightSuretyData.setOperatingStatus(false);
+          await config.flightSuretyData.setOperatingStatus(false, { from: config.owner});
       }
       catch(e) {
           accessDenied = true;
@@ -54,7 +54,7 @@ contract('Flight Surety Tests', async (accounts) => {
 
   it(`(multiparty) can block access to functions using requireIsOperational when operating status is false`, async function () {
 
-      await config.flightSuretyData.setOperatingStatus(false);
+      await config.flightSuretyData.setOperatingStatus(false, { from: config.owner});
 
       let reverted = false;
       try 
@@ -67,45 +67,62 @@ contract('Flight Surety Tests', async (accounts) => {
       assert.equal(reverted, true, "Access not blocked for requireIsOperational");      
 
       // Set it back for other tests to work
-      await config.flightSuretyData.setOperatingStatus(true);
+      await config.flightSuretyData.setOperatingStatus(true, { from: config.owner});
 
   });
 
   it('(airline) cannot register an Airline using registerAirline() if it is not funded', async () => {
     
     // ARRANGE
-    let secondAirline = accounts[2];
+    const secondAirline = accounts[2];
 
     // ACT
     try {
-        await config.flightSuretyApp.registerAirline(secondAirline, {from: config.firstAirline});
+        await config.flightSuretyApp.registerAirline(secondAirline, { from: config.firstAirline});
     }
     catch(e) {
 
     }
-    let result = await config.flightSuretyData.isAirline.call(secondAirline);
+    const result = await config.flightSuretyData.isAirline.call(secondAirline);
 
     // ASSERT
     assert.equal(result, false, "Airline should not be able to register another airline if it hasn't provided funding");
 
   });
 
+  it('(airline) can add funds if it is registered', async () => {
+    // ARRANGE
+    const secondAirline = accounts[2];
+
+    // ACT
+    await config.flightSuretyApp.fund({from: config.firstAirline, value: web3.utils.toWei("10", "ether")});
+
+    let notRegisteredAddedFunds = true;
+    try{
+        await config.flightSuretyApp.fund({from: secondAirline, value: web3.utils.toWei("10", "ether")});
+    }catch(e){
+        notRegisteredAddedFunds = false;
+    }
+
+
+    // ASSERT
+    const status = await config.flightSuretyData.getAirlineStatus.call(config.firstAirline);
+
+    assert.equal(status[0], 10 * config.weiMultiple, "A registered airline should be able to add funds at least equal with the registration fee");
+    assert.equal(notRegisteredAddedFunds, false, "A registered airline should not be able to add funds if it is not registered");
+
+  });
+
   it('(airline) can register an Airline using registerAirline() if it is funded', async () => {
     
     // ARRANGE
-    let secondAirline = accounts[2];
+    const secondAirline = accounts[2];
 
     // ACT
-    try {
-        await config.flightSuretyApp.fund({from: config.firstAirline, value: web3.utils.toWei("10", "ether")});
-        await config.flightSuretyApp.registerAirline(secondAirline, {from: config.firstAirline});
-    }
-    catch(e) {
-
-    }
-    let result = await config.flightSuretyData.isAirline.call(secondAirline);
-
+    await config.flightSuretyApp.registerAirline(secondAirline, { from:  config.firstAirline});
+        
     // ASSERT
+    const result = await config.flightSuretyData.isAirline.call(secondAirline);
     assert.equal(result, true, "Airline should be able to register another airline if it has provided funding");
 
   });
@@ -113,15 +130,15 @@ contract('Flight Surety Tests', async (accounts) => {
 
   it('(airline) after fifth airline can only add candidates airlines', async () => {
     // ARRANGE
-    let secondAirline = accounts[2];
-    let thirdAirline = accounts[3];
-    let fourthAirline = accounts[4];
-    let fifthAirline = accounts[5];
-    let sixthAirline = accounts[6];
+    const secondAirline = accounts[2];
+    const thirdAirline = accounts[3];
+    const fourthAirline = accounts[4];
+    const fifthAirline = accounts[5];
+    const sixthAirline = accounts[6];
     
     await config.flightSuretyApp.fund({from: secondAirline, value: web3.utils.toWei("10", "ether")});
     
-    await config.flightSuretyApp.registerAirline(thirdAirline, {from: config.firstAirline});
+    await config.flightSuretyApp.registerAirline(thirdAirline, {from: secondAirline});
     await config.flightSuretyApp.fund({from: thirdAirline, value: web3.utils.toWei("10", "ether")});
     
     await config.flightSuretyApp.registerAirline(fourthAirline, {from: thirdAirline});
@@ -134,9 +151,9 @@ contract('Flight Surety Tests', async (accounts) => {
     await config.flightSuretyApp.registerAirline(sixthAirline, {from: fifthAirline});
     
     // ASSERT
-   let result5 = await config.flightSuretyData.isAirline.call(fifthAirline);
-   let result6 = await config.flightSuretyData.isAirline.call(sixthAirline);
-   let result6candidate = await config.flightSuretyData.isCandidate.call(sixthAirline);
+   const result5 = await config.flightSuretyData.isAirline.call(fifthAirline);
+   const result6 = await config.flightSuretyData.isAirline.call(sixthAirline);
+   const result6candidate = await config.flightSuretyData.isCandidate.call(sixthAirline);
    
    assert.equal(result5, true, "Fifth Airline can be registered");
    assert.equal(result6, false, "Sixth Airline should not be added as registered");
@@ -146,17 +163,17 @@ contract('Flight Surety Tests', async (accounts) => {
 
     it('(airline) Sixth airline should be registered if approved from half of the registered airlines', async () => {
         // ARRANGE
-        let secondAirline = accounts[2];
-        let thirdAirline = accounts[3];
-        let sixthAirline = accounts[6];
+        const secondAirline = accounts[2];
+        const thirdAirline = accounts[3];
+        const sixthAirline = accounts[6];
         
         // ACT
         await config.flightSuretyApp.registerAirline(sixthAirline, {from: secondAirline});
         await config.flightSuretyApp.registerAirline(sixthAirline, {from: thirdAirline});
         
         // ASSERT
-       let result6 = await config.flightSuretyData.isAirline.call(sixthAirline);
-       let result6candidate = await config.flightSuretyData.isCandidate.call(sixthAirline);
+       const result6 = await config.flightSuretyData.isAirline.call(sixthAirline);
+       const result6candidate = await config.flightSuretyData.isCandidate.call(sixthAirline);
        
        assert.equal(result6, true, "Sixth Airline should be added as registered");
        assert.equal(result6candidate, false, "Sixth Airline should had removed from candidates list");
@@ -200,6 +217,7 @@ contract('Flight Surety Tests', async (accounts) => {
      * In order to test  "processFlightStatus" method in [FlightSuretyApp.sol] is set to public. (production status should be internal)
      */
  
+    /*
     it('(multiparty) can payout passengers', async () => {
 
         //ARRANGE
@@ -223,5 +241,5 @@ contract('Flight Surety Tests', async (accounts) => {
         assert.equal("750000000000000000", newPassengerPayoutAmount[1], "Passengers new payout amount should be half of the deposit");
 
     })
-    
+    */
 });
