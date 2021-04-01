@@ -166,8 +166,8 @@ contract FlightSuretyApp {
                                     uint256 timestamp,
                                     uint8 statusCode
                                 )
-                                internal 
-                                //public 
+                                //internal 
+                                public 
     {
         flightSuretyData.processFlightStatus(airline, flight, timestamp, statusCode);
     }
@@ -288,7 +288,7 @@ contract FlightSuretyApp {
     {
         require((oracles[msg.sender].indexes[0] == index) || (oracles[msg.sender].indexes[1] == index) || (oracles[msg.sender].indexes[2] == index), "Index does not match oracle request");
 
-
+        processFlightStatus(airline, flight, timestamp, statusCode);
         bytes32 key = keccak256(abi.encodePacked(index, airline, flight, timestamp)); 
         require(oracleResponses[key].isOpen, "Flight or timestamp do not match oracle request");
 

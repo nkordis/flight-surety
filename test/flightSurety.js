@@ -214,10 +214,10 @@ contract('Flight Surety Tests', async (accounts) => {
 	})
 
     /**
-     * In order to test  "processFlightStatus" method in [FlightSuretyApp.sol] is set to public. (production status should be internal)
+     * In order to test  "processFlightStatus" method in [FlightSuretyApp.sol] is set to public. (in production mode would be internal)
      */
  
-    /*
+    
     it('(multiparty) can payout passengers', async () => {
 
         //ARRANGE
@@ -238,8 +238,8 @@ contract('Flight Surety Tests', async (accounts) => {
         const newPassengerPayoutAmount = await config.flightSuretyData.getPassenger(passengerAddress);
 
         //ASSERT
-        assert.equal("750000000000000000", newPassengerPayoutAmount[1], "Passengers new payout amount should be half of the deposit");
+        assert.equal("750000000000000000", newPassengerPayoutAmount[1], "Passengers new payout amount should be 1,5 of the deposit");
 
     })
-    */
+    
 });

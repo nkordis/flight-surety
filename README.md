@@ -25,8 +25,6 @@ In a separate terminal window, compile smart contracts:
 To run truffle tests:
 
 `truffle test ./test/flightSurety.js`
-`truffle test ./test/oracles.js`
-
 
 To use the dapp:
 
@@ -44,15 +42,6 @@ To view dapp:
 `npm run server`
 `truffle test ./test/oracles.js`
 
-
-## Deploy
-
-To build dapp for prod:
-
-`npm run dapp:prod`
-
-
-Deploy the contents of the ./dapp folder
 
 ## Resources
 

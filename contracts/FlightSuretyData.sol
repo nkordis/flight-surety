@@ -65,6 +65,7 @@ contract FlightSuretyData {
         registeredAirlines[firstAirlineAddress] = Airline(firstAirlineAddress, 0, new address[](0));
     }
 
+
     /********************************************************************************************/
     /*                                       FUNCTION MODIFIERS                                 */
     /********************************************************************************************/
@@ -321,8 +322,7 @@ contract FlightSuretyData {
                             external
                             payable
     {
-         require(msg.value <= 1 ether, "Insurrance cannot be more than 1 ether");
-
+        require(msg.value <= 1 ether, "Insurrance cannot be more than 1 ether");
         passengersAddresses[passengerAddress] = Passenger(msg.value, 0);
         flights[key].passengersInsurances.push(passengerAddress);
     }
